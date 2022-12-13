@@ -1,0 +1,6 @@
+.aws-sam/
+packaged.yaml
+samconfig.toml
+*.db
+.pre-commit-config.yaml
+.aws-composer/
