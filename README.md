@@ -1,6 +1,6 @@
 # AWS SSO Permission Policies Analyzer
 
-This solution 
+This solution uses AWS SDKs to automate the analysis of all users in AWS Identity Center (previously AWS SSO) and retrieve the attached permission policies (Inline, AWS Managed, Customer Managed) based on the assigned SSO group.
 
 AWS Services used
 - Application Composer - to generate baseline template and resources
