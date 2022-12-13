@@ -11,7 +11,7 @@ AWS Services used
 - Amazon S3
 
 ## To deploy
-- Clone a copy of your
+- Clone a copy of this repo. You can either deploy this by using CloudFormation or AWS SAM. The 2 Lambda Function codes are in the `src` folder.
 
 ## Default Specifications
 ### Amazon EventBridge Schedule
