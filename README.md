@@ -22,6 +22,9 @@ In your own AWS environment, make sure that you have the following set up:
     * The AWS IAM Identity Center instance identityStoreId - example: d-xxxxxxxxxx
     * The AWS IAM Identity Center instance instanceArn -  example: arn:aws:sso:::instance/ssoins-xxxxxxxxxx
 * Access and permission to deploy the related AWS services in CloudFormation shown below.
+
+**_NOTE:_** This solution is expected to deploy in the account in which your AWS Identity Center instance is being setup. If you wish to deploy in other accounts, you need to establish cross-account access for the IAM roles of the relevant services’ shown below.
+
 * [AWS SAM CLI installed](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html). We will deploy the solution using AWS SAM. If you would like to understand more about how AWS SAM works and its specification, you can refer to this [documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification.html) that explains more in detail.
 
 ## Deployment steps
@@ -60,7 +63,7 @@ The default specification for the Amazon EventBridge Schedule is configured with
   "ssoDeployedRegion": "YOUR_SSO_DEPLOYED_REGION" (example: us-east-1)
 }
 ```
-*Note: The format and keyword format is important to execute the Lambda function successfully:
+**_NOTE:_** The format and keyword format is important to execute the Lambda function successfully:
 
 ![eventbridge-execution-pattern](static/images/eventbridge-execution-pattern.jpg)
 
