@@ -78,7 +78,7 @@ def handler(event, context):
     sns.publish(
         TopicArn = SNS_ARN,
         Message = sns_message,
-        Subject='SSO IAM Analyzer Report'
+        Subject='AWS IAM Identity Center Policies Analyzer Report'
         )
         
     return {}

@@ -36,7 +36,7 @@ def handler(event, context):
             )
         
         for account in assoc_acc_response.get('AccountIds'):
-            # get the principal ID (group ID) to link with sso group to get members
+            # get the principal ID (group ID) to link with the AWS IAM Identity Center group to get members
             account_assignments_response = sso.list_account_assignments(
                 InstanceArn=INSTANCE_ARN,
                 AccountId=account,
