@@ -42,28 +42,51 @@ def handler(event, context):
             # For logging purpose only
             a=a+1
             g=1
-            for group in user['groupMemberships']:
-                groupId = group['GroupId']
+            # For users that belong in a group
+            if user['groupMemberships']:
+                for group in user['groupMemberships']:
+                    print (group)
+                    groupId = group['GroupId']
+                    # For logging purpose only
+                    g=g+1
+                    # For logging purpose only
+                    print('user: ' + str(a-1) + ' with name: ' + userName + ', ' + 'group No: ' + str(g-1) + ' with group ID: ' + groupId + '\n')
+                    permission_response = iam_permissions_table.query(
+                        TableName=PERMISSION_TABLE,
+                        KeyConditionExpression="id = :id",
+                        FilterExpression= "contains(groupId, :gid)",
+                        ExpressionAttributeValues={
+                            ':id': INSTANCE_ARN,
+                            ':gid': groupId
+                        }
+                        )
+
+                    if permission_response.get('Count') == 0:
+                        writer.writerow([userName, groupId, '', '', '', ''])
+                    else:
+                        for permission in permission_response.get('Items'):
+                            # print(permission)
+                            writer.writerow([userName, groupId, permission['permissionSetArn'], permission['inlinePolicies'], permission['managedPolicies'], permission['customerPolicies']])
+            # For users that dont belong in a group
+            else:
                 # For logging purpose only
-                g=g+1
-                # For logging purpose only
-                print('user: ' + str(a-1) + ' with name: ' + userName + ', ' + 'group No: ' + str(g-1) + ' with group ID: ' + groupId + '\n')
+                print('user: ' + str(a-1) + ' with name: ' + userName + ', ' + '\n')
                 permission_response = iam_permissions_table.query(
                     TableName=PERMISSION_TABLE,
                     KeyConditionExpression="id = :id",
                     FilterExpression= "contains(groupId, :gid)",
                     ExpressionAttributeValues={
                         ':id': INSTANCE_ARN,
-                        ':gid': groupId
+                        ':gid': userId
                     }
                     )
-                # print(permission_response)
+                
                 if permission_response.get('Count') == 0:
-                    writer.writerow([userName, groupId, '', '', '', ''])
+                    writer.writerow([userName, userId, '', '', '', ''])
                 else:
                     for permission in permission_response.get('Items'):
                         # print(permission)
-                        writer.writerow([userName, groupId, permission['permissionSetArn'], permission['inlinePolicies'], permission['managedPolicies'], permission['customerPolicies']])
+                        writer.writerow([userName, userId, permission['permissionSetArn'], permission['inlinePolicies'], permission['managedPolicies'], permission['customerPolicies']])
 
     s3.upload_file('/tmp/' + S3_UPLOAD_KEY, BUCKET_NAME, S3_UPLOAD_KEY)
     
