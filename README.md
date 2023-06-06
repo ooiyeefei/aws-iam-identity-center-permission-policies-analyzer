@@ -36,6 +36,8 @@ In your own AWS environment, make sure that you have the following set up:
 
 ![sample-sam-deploy](/static/images/sample-sam-deploy.jpg)
 
+**_NOTE:_** "Stack Name" has a max of 34 characters and can contain only lower-case characters, numbers, periods, and dashes. 
+
 ### (Optional) Update your preferred schedule preference
 The default specification for the Amazon EventBridge Schedule is configured with cron schedule: 1st day of each month 0800 UTC +8. Update your preferred schedule and timezone accordingly. To update:
 - Go to [EventBridge](https://console.aws.amazon.com/events/home) console, click `Schedules` under the section `Scheduler` on the left hand panel. Check the box of `{StackName}-monthlySchedule-{randomID}` and click “Edit”.
@@ -53,13 +55,6 @@ The default specification for the Amazon EventBridge Schedule is configured with
 {
   "identityStoreId": "d-xxxxxxxxxx",
   "instanceArn": "arn:aws:sso:::instance/ssoins-xxxxxxxxxx",
-  "accountId": [
-    "xxxxxxxxxx",
-    "xxxxxxxxxx",
-    "xxxxxxxxxx",
-    "xxxxxxxxxx",
-    "xxxxxxxxxx"
-  ],
   "ssoDeployedRegion": "YOUR_SSO_DEPLOYED_REGION" (example: us-east-1)
 }
 ```

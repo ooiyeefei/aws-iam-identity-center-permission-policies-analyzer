@@ -6,7 +6,7 @@ Resources:
       ScheduleExpression: cron(0 8 1 * ? *)
       FlexibleTimeWindow:
         Mode: 'OFF'
-      ScheduleExpressionTimezone: UTC+8
+      ScheduleExpressionTimezone: Asia/Singapore
       Target:
         Arn: !Ref monthlyUserPermissionAssessment
         RoleArn: !GetAtt monthlyScheduleTomonthlyUserPermissionAssessmentRole.Arn

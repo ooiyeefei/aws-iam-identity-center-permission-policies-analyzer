@@ -14,7 +14,6 @@ def handler(event, context):
     print(json.dumps(event))
     IDENTITY_STORE_ID = event['identityStoreId']
     INSTANCE_ARN = event['instanceArn']
-    ACCOUNT_ID = event['accountId']
     SSO_DEPLOYED_REGION = event['ssoDeployedRegion']
     
     sso = boto3.client('sso-admin', region_name=SSO_DEPLOYED_REGION)
