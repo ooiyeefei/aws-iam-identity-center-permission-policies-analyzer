@@ -14,6 +14,41 @@ iam = boto3.client('iam')
 sns = boto3.client('sns')
 s3 = boto3.client('s3')
 
+def query_ddb_to_populate_report(user_name, principal_id, group_name, principal_type, iam_permissions_table, instance_arn, writer):
+    permission_response = iam_permissions_table.query(
+        TableName=PERMISSION_TABLE,
+        KeyConditionExpression="id = :id",
+        FilterExpression= "contains(principalId, :pid)",
+        ExpressionAttributeValues={
+            ':id': instance_arn,
+            ':pid': principal_id
+        }
+        )
+
+    print('Dynamodb query result for user:' + user_name + ', group name:'+ group_name)
+    print(permission_response)
+
+    if permission_response.get('Count') == 0:
+        writer.writerow([user_name, principal_id, principal_type, group_name, 'not_assigned'])
+    else:
+        for permission in permission_response.get('Items'):
+            print('Permissions for user:' + user_name + ', group name:'+ group_name)
+            print(permission)
+            
+            # Excel has a 32,767 char limit, check if each policy exceeds the limit
+            policy_type_list = ['inlinePolicies', 'customerPolicies','managedPolicies' ]
+            for policy_type in policy_type_list:
+                if len(str(permission[policy_type])) > 32700:
+                    permission[policy_type] = 'Exceed character limit for excel, refer to AWS Console for full policy details'
+                
+            # Loop through all assignments of a permission set for individual users and groups
+            for no_of_assignments, accountid in enumerate(permission['accountId']):
+                # Additional principal type check to prevent duplicated records (a user can be assigned individually or assigned as part of a group)
+                if principal_type == permission['principalType'][no_of_assignments]:
+                    writer.writerow([user_name, principal_id, permission['principalType'][no_of_assignments], group_name, permission['accountId'][no_of_assignments], permission['permissionSetArn'], permission['permissionSetName'], permission['inlinePolicies'], permission['customerPolicies'], permission['managedPolicies']])
+                    
+            
+                    
 def handler(event, context):
     # Log the event argument for debugging and for use in local development.
     print(json.dumps(event))
@@ -32,70 +67,27 @@ def handler(event, context):
 
     with open('/tmp/' + curr_date + 'result.csv', 'w') as f:
         writer = csv.writer(f)
-        writer.writerow(['User', 'GroupIds', 'Permission Sets', 'Inline Policy', 'AWS Managed Policy', 'Customer Managed Policy'])
+        writer.writerow(['User', 'PrincipalId', 'PrincipalType', 'GroupName', 'AccountIdAssignment', 'PermissionSetARN', 'PermissionSetName', 'Inline Policy', 'Customer Managed Policy','AWS Managed Policy'])
         
-        # For logging purpose only
-        a=1
         for user in user_list_response.get('Items'):
-            userId = user['userId']
-            userName = user['userName']
-            # For logging purpose only
-            a=a+1
-            g=1
-            # For users that belong in a group
+            print('extracting user data')
+            print(user)
+            user_id = user['userId']
+            user_name = user['userName']
+            group_name = ''
+       
+            # Check individual user assignment first
+            query_ddb_to_populate_report(user_name, user_id, group_name, 'USER', iam_permissions_table, INSTANCE_ARN, writer)
+
+            # Check if user is in a group and group assignment 
             if user['groupMemberships']:
-                for group in user['groupMemberships']:
-                    print (group)
-                    groupId = group['GroupId']
-                    # For logging purpose only
-                    g=g+1
-                    # For logging purpose only
-                    print('user: ' + str(a-1) + ' with name: ' + userName + ', ' + 'group No: ' + str(g-1) + ' with group ID: ' + groupId + '\n')
-                    permission_response = iam_permissions_table.query(
-                        TableName=PERMISSION_TABLE,
-                        KeyConditionExpression="id = :id",
-                        FilterExpression= "contains(groupId, :gid)",
-                        ExpressionAttributeValues={
-                            ':id': INSTANCE_ARN,
-                            ':gid': groupId
-                        }
-                        )
-
-                    if permission_response.get('Count') == 0:
-                        writer.writerow([userName, groupId, '', '', '', ''])
-                    else:
-                        for permission in permission_response.get('Items'):
-                            # print(permission)
-                            writer.writerow([userName, groupId, permission['permissionSetArn'], permission['inlinePolicies'], permission['managedPolicies'], permission['customerPolicies']])
-            # For users that dont belong in a group
-            else:
-                # For logging purpose only
-                print('user: ' + str(a-1) + ' with name: ' + userName + ', ' + '\n')
-                permission_response = iam_permissions_table.query(
-                    TableName=PERMISSION_TABLE,
-                    KeyConditionExpression="id = :id",
-                    FilterExpression= "contains(groupId, :gid)",
-                    ExpressionAttributeValues={
-                        ':id': INSTANCE_ARN,
-                        ':gid': userId
-                    }
-                    )
-                
-                if permission_response.get('Count') == 0:
-                    writer.writerow([userName, userId, '', '', '', ''])
-                else:
-                    for permission in permission_response.get('Items'):
-                        # print(permission)
-                        writer.writerow([userName, userId, permission['permissionSetArn'], permission['inlinePolicies'], permission['managedPolicies'], permission['customerPolicies']])
-
+                for idx, group in enumerate(user['groupMemberships']):
+                    group_id = group['GroupId']
+                    group_name = user['groupName'][idx]
+                    print('groupname is: ' + group_name)
+                    query_ddb_to_populate_report(user_name, group_id, group_name, 'GROUP', iam_permissions_table, INSTANCE_ARN, writer)
+   
     s3.upload_file('/tmp/' + S3_UPLOAD_KEY, BUCKET_NAME, S3_UPLOAD_KEY)
-    
-    # For logging purpose only
-    # print("before printing table\n")
-    # with open('/tmp/' + S3_UPLOAD_KEY, 'r+') as f:
-    #     reader = csv.reader(f)
-    #     for row in reader:
-    #         print(row)
     
     sns_message = "Analysis of users list with granted permission policies have been completed. \n Find out more from the report stored in the S3 bucket " + BUCKET_NAME + ", with the object key name: " + S3_UPLOAD_KEY
     sns.publish(

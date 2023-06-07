@@ -25,6 +25,7 @@ def handler(event, context):
     permission_sets_response = sso.list_permission_sets(
         InstanceArn=INSTANCE_ARN
     )
+    print(permission_sets_response)
     
     # loop through permission set to get list of group ID (to get sso group and users), policies, default versions (for json details)
     for item in permission_sets_response.get('PermissionSets'):
@@ -34,18 +35,29 @@ def handler(event, context):
             PermissionSetArn=item
             )
         
+        describe_permission_set_response = sso.describe_permission_set(
+            InstanceArn=INSTANCE_ARN,
+            PermissionSetArn=item
+            )
+
+        # Define array to store Principal ID, Account ID and Principal Type
+        principal_id_list=[]
+        account_list=[]
+        principal_type_list=[]
+        
         for account in assoc_acc_response.get('AccountIds'):
-            # get the principal ID (group ID) to link with the AWS IAM Identity Center group to get members
+            # get the principal ID to link with the AWS IAM Identity Center group to get members
             account_assignments_response = sso.list_account_assignments(
                 InstanceArn=INSTANCE_ARN,
                 AccountId=account,
                 PermissionSetArn=item
                 )
-            
-            group_list=[]
+
             for group in account_assignments_response['AccountAssignments']:
                 # build json
-                group_list.append(group['PrincipalId'])
+                principal_id_list.append(group['PrincipalId'])
+                account_list.append(group['AccountId'])
+                principal_type_list.append(group['PrincipalType'])
                 
         # get the list of managed policies attached in each of the permission set
         managed_policies_response = sso.list_managed_policies_in_permission_set(
@@ -85,7 +97,10 @@ def handler(event, context):
             Item={
                 'id': INSTANCE_ARN,
                 'permissionSetArn': item,
-                'groupId': group_list,
+                'permissionSetName': describe_permission_set_response['PermissionSet']['Name'],
+                'principalId': principal_id_list,
+                'accountId': account_list,
+                'principalType': principal_type_list,
                 'managedPolicies': managed_policies,
                 'inlinePolicies': inline_policies_response['InlinePolicy'],
                 'customerPolicies': customer_policies_response['CustomerManagedPolicyReferences']
@@ -104,6 +119,13 @@ def handler(event, context):
                 'UserId': user['UserId']
             }
         )
+        group_name_list=[]
+        for group in user_group_membership_response['GroupMemberships']:
+            group_description_response = identitystore.describe_group(
+                IdentityStoreId=IDENTITY_STORE_ID,
+                GroupId=group['GroupId']
+                )
+            group_name_list.append(group_description_response['DisplayName'])
         
         # store all in ddb table
         user_list_table.put_item(
@@ -111,7 +133,8 @@ def handler(event, context):
             Item={
                 'userId': user['UserId'],
                 'userName': user['UserName'],
-                'groupMemberships': user_group_membership_response['GroupMemberships']
+                'groupMemberships': user_group_membership_response['GroupMemberships'],
+                'groupName': group_name_list
             })
     
     return event
