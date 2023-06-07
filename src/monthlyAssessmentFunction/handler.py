@@ -14,25 +14,25 @@ iam = boto3.client('iam')
 sns = boto3.client('sns')
 s3 = boto3.client('s3')
 
-def query_ddb_to_populate_report(userName, PrincipalId, groupName, PrincipalType, iam_permissions_table, INSTANCE_ARN, writer):
+def query_ddb_to_populate_report(user_name, principal_id, group_name, principal_type, iam_permissions_table, instance_arn, writer):
     permission_response = iam_permissions_table.query(
         TableName=PERMISSION_TABLE,
         KeyConditionExpression="id = :id",
         FilterExpression= "contains(principalId, :pid)",
         ExpressionAttributeValues={
-            ':id': INSTANCE_ARN,
-            ':pid': PrincipalId
+            ':id': instance_arn,
+            ':pid': principal_id
         }
         )
 
-    print('Dynamodb query result for user:' + userName + ', group name:'+ groupName)
+    print('Dynamodb query result for user:' + user_name + ', group name:'+ group_name)
     print(permission_response)
 
     if permission_response.get('Count') == 0:
-        writer.writerow([userName, PrincipalId, PrincipalType, groupName, 'not_assigned'])
+        writer.writerow([user_name, principal_id, principal_type, group_name, 'not_assigned'])
     else:
         for permission in permission_response.get('Items'):
-            print('Permissions for user:' + userName + ', group name:'+ groupName)
+            print('Permissions for user:' + user_name + ', group name:'+ group_name)
             print(permission)
             
             # Excel has a 32,767 char limit, check if each policy exceeds the limit
@@ -44,8 +44,8 @@ def query_ddb_to_populate_report(userName, PrincipalId, groupName, PrincipalType
             # Loop through all assignments of a permission set for individual users and groups
             for no_of_assignments, accountid in enumerate(permission['accountId']):
                 # Additional principal type check to prevent duplicated records (a user can be assigned individually or assigned as part of a group)
-                if PrincipalType == permission['principalType'][no_of_assignments]:
-                    writer.writerow([userName, PrincipalId, permission['principalType'][no_of_assignments], groupName, permission['accountId'][no_of_assignments], permission['permissionSetArn'], permission['permissionSetName'], permission['inlinePolicies'], permission['customerPolicies'], permission['managedPolicies']])
+                if principal_type == permission['principalType'][no_of_assignments]:
+                    writer.writerow([user_name, principal_id, permission['principalType'][no_of_assignments], group_name, permission['accountId'][no_of_assignments], permission['permissionSetArn'], permission['permissionSetName'], permission['inlinePolicies'], permission['customerPolicies'], permission['managedPolicies']])
                     
             
                     
@@ -72,20 +72,20 @@ def handler(event, context):
         for user in user_list_response.get('Items'):
             print('extracting user data')
             print(user)
-            userId = user['userId']
-            userName = user['userName']
-            groupName = ''
+            user_id = user['userId']
+            user_name = user['userName']
+            group_name = ''
        
             # Check individual user assignment first
-            query_ddb_to_populate_report(userName, userId, groupName, 'USER', iam_permissions_table, INSTANCE_ARN, writer)
+            query_ddb_to_populate_report(user_name, user_id, group_name, 'USER', iam_permissions_table, INSTANCE_ARN, writer)
 
             # Check if user is in a group and group assignment 
             if user['groupMemberships']:
                 for idx, group in enumerate(user['groupMemberships']):
-                    groupId = group['GroupId']
-                    groupName = user['groupName'][idx]
-                    print('groupname is: ' + groupName)
-                    query_ddb_to_populate_report(userName, groupId, groupName, 'GROUP', iam_permissions_table, INSTANCE_ARN, writer)
+                    group_id = group['GroupId']
+                    group_name = user['groupName'][idx]
+                    print('groupname is: ' + group_name)
+                    query_ddb_to_populate_report(user_name, group_id, group_name, 'GROUP', iam_permissions_table, INSTANCE_ARN, writer)
    
     s3.upload_file('/tmp/' + S3_UPLOAD_KEY, BUCKET_NAME, S3_UPLOAD_KEY)
     
