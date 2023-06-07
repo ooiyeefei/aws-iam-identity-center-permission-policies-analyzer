@@ -17,8 +17,7 @@ Solution Architecture
 In your own AWS environment, make sure that you have the following set up:
 
 * An AWS IAM Identity Center instance set up in the account
-* The account details and [AWS IAM Identity Center instance metadata](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_InstanceMetadata.html) that you would like to perform the analysis on:
-    * AWS Account ID where your AWS IAM Identity Center instance is being set up
+* [AWS IAM Identity Center instance metadata](https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_InstanceMetadata.html) that you would like to perform the analysis on:
     * The AWS IAM Identity Center instance identityStoreId - example: d-xxxxxxxxxx
     * The AWS IAM Identity Center instance instanceArn -  example: arn:aws:sso:::instance/ssoins-xxxxxxxxxx
 * Access and permission to deploy the related AWS services in CloudFormation shown below.
@@ -88,9 +87,6 @@ Once the execution starts, you will arrive at the execution page and able to che
 ![stepfunction-start-execution-3](static/images/stepfunction-start-execution-3.jpg)
 ![stepfunction-start-execution-4](static/images/stepfunction-start-execution-4.jpg)
 
-### (Optional) Customizing your user notification email
-If you wish to customize your email notification subject and email content, you can do so at the Lambda Function `{StackName}-monthlyAssessmentFunction-{RandomID}`. Scroll down to the bottom of the source code and edit the following part accordingly:
-![lambda-customize-email](static/images/lambda-customize-email.jpg)
 
 ### Notification from each successful review
 After each successful execution, you should receive an email notification with the email subscribed in the SNS topic. You can then retrieve the report from the S3 bucket according to the object key name specified in the email. An example of the email notification is as below:
@@ -98,8 +94,15 @@ After each successful execution, you should receive an email notification with t
 ![report-email](static/images/report-email.jpg)
 
 Example of the report(s) shown in the S3 bucket:
-!s3-bucket-report[](static/images/s3-bucket-report.jpg)
+![s3-bucket-report](static/images/s3-bucket-report.jpg)
 
+csv report details:
+| User | PrincipalId | PrincipalType | GroupName | AccountIdAssignment | PermissionSetARN | PermissionSetName | Inline Policy | Customer Managed Policy | AWS Managed Policy |
+| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
+| username      | An identifier for an object in IAM Identity Center, such as a user or group.       | USER or GROUP       | Group’s display name value (if any) | Identifier of the AWS account assigned with the specified permission set      | ARN of the permission set       | Name of the permission set        | Inline policy that is attached to the permission set        | Specifies the names and paths of the customer managed policies that you have attached to your permission set    | Details of the AWS managed policy       |
+
+### (Optional) Customizing your user notification email
+If you wish to customize your email notification subject and email content, you can do so at the Lambda Function `{StackName}-monthlyAssessmentFunction-{RandomID}`. Scroll down to the bottom of the source code and edit the following part accordingly:
 ![lambda-customize-email](static/images/lambda-customize-email.jpg)
 
 ## Clean up the resources
