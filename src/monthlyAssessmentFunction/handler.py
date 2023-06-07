@@ -34,21 +34,20 @@ def query_ddb_to_populate_report(userName, PrincipalId, groupName, PrincipalType
         for permission in permission_response.get('Items'):
             print('Permissions for user:' + userName + ', group name:'+ groupName)
             print(permission)
-            # Excel has a 32700 character limit
-            if len(str(permission['inlinePolicies'])) > 32700:
-                permission['inlinePolicies'] = 'Exceed character limit for excel, refer to AWS Console for full policy details'
-            if len(str(permission['customerPolicies'])) > 32700:
-                permission['customerPolicies'] = 'Exceed character limit for excel, refer to AWS Console for policy details'
-            if len(str(permission['managedPolicies'])) > 32700:
-                permission['managedPolicies'] = 'Exceed character limit for excel, refer to AWS Console for policy details'
+            
+            # Excel has a 32,767 char limit, check if each policy exceeds the limit
+            policy_type_list = ['inlinePolicies', 'customerPolicies','managedPolicies' ]
+            for policy_type in policy_type_list:
+                if len(str(permission[policy_type])) > 32700:
+                    permission[policy_type] = 'Exceed character limit for excel, refer to AWS Console for full policy details'
                 
             # Loop through all assignments of a permission set for individual users and groups
             for no_of_assignments, accountid in enumerate(permission['accountId']):
-                if PrincipalType == 'USER' and permission['principalType'][no_of_assignments] == 'USER':
-                    writer.writerow([userName, PrincipalId, permission['principalType'][no_of_assignments], groupName, permission['accountId'][no_of_assignments], permission['permissionSetArn'], permission['permissionSetName'], permission['inlinePolicies'], permission['customerPolicies'], permission['managedPolicies']])
-                if PrincipalType == 'GROUP'and permission['principalType'][no_of_assignments] == 'GROUP':
+                # Additional principal type check to prevent duplicated records (a user can be assigned individually or assigned as part of a group)
+                if PrincipalType == permission['principalType'][no_of_assignments]:
                     writer.writerow([userName, PrincipalId, permission['principalType'][no_of_assignments], groupName, permission['accountId'][no_of_assignments], permission['permissionSetArn'], permission['permissionSetName'], permission['inlinePolicies'], permission['customerPolicies'], permission['managedPolicies']])
                     
+            
                     
 def handler(event, context):
     # Log the event argument for debugging and for use in local development.
