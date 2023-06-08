@@ -40,13 +40,13 @@ Resources:
         StreamViewType: NEW_AND_OLD_IMAGES
   notificationEmail:
     Type: AWS::SNS::Topic
-  updateDbFunction:
+  dataExtractionFunction:
     Type: AWS::Serverless::Function
     Properties:
       Description: !Sub
         - Stack ${AWS::StackName} Function ${ResourceName}
-        - ResourceName: updateDbFunction
-      CodeUri: src/updateDbFunction
+        - ResourceName: dataExtractionFunction
+      CodeUri: src/dataExtractionFunction
       Handler: handler.handler
       Runtime: python3.9
       MemorySize: 6008
@@ -83,18 +83,18 @@ Resources:
               Resource: '*'
       Layers:
         - !Sub arn:aws:lambda:${AWS::Region}:770693421928:layer:Klayers-p39-boto3:9
-  updateDbFunctionLogGroup:
+  dataExtractionFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
     Properties:
-      LogGroupName: !Sub /aws/lambda/${updateDbFunction}
-  monthlyAssessmentFunction:
+      LogGroupName: !Sub /aws/lambda/${dataExtractionFunction}
+  dataTransformLoadFunction:
     Type: AWS::Serverless::Function
     Properties:
       Description: !Sub
         - Stack ${AWS::StackName} Function ${ResourceName}
-        - ResourceName: monthlyAssessmentFunction
-      CodeUri: src/monthlyAssessmentFunction
+        - ResourceName: dataTransformLoadFunction
+      CodeUri: src/dataTransformLoadFunction
       Handler: handler.handler
       Runtime: python3.9
       MemorySize: 3008
@@ -119,11 +119,11 @@ Resources:
             TableName: !Ref fullPermissionSetsWithGroupTable
         - S3CrudPolicy:
             BucketName: !Ref monthlyReportBucket
-  monthlyAssessmentFunctionLogGroup:
+  dataTransformLoadFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     DeletionPolicy: Retain
     Properties:
-      LogGroupName: !Sub /aws/lambda/${monthlyAssessmentFunction}
+      LogGroupName: !Sub /aws/lambda/${dataTransformLoadFunction}
   monthlyUserPermissionAssessment:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -135,14 +135,14 @@ Resources:
             Resource: arn:aws:states:::lambda:invoke
             Next: AssessmentTask
             Parameters:
-              FunctionName: ${updateDbFunctionArn}
+              FunctionName: ${dataExtractionFunctionArn}
               Payload.$: $
           AssessmentTask:
             Type: Task
             Next: Done
             Resource: arn:aws:states:::lambda:invoke
             Parameters:
-              FunctionName: ${monthlyAssessmentFunctionArn}
+              FunctionName: ${dataTransformLoadFunctionArn}
               Payload.$: $
           Done:
             Type: Pass
@@ -168,15 +168,15 @@ Resources:
                 - logs:DescribeLogGroups
               Resource: '*'
         - LambdaInvokePolicy:
-            FunctionName: !Ref updateDbFunction
+            FunctionName: !Ref dataExtractionFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref monthlyAssessmentFunction
+            FunctionName: !Ref dataTransformLoadFunction
       Tracing:
         Enabled: true
       Type: STANDARD
       DefinitionSubstitutions:
-        updateDbFunctionArn: !GetAtt updateDbFunction.Arn
-        monthlyAssessmentFunctionArn: !GetAtt monthlyAssessmentFunction.Arn
+        dataExtractionFunctionArn: !GetAtt dataExtractionFunction.Arn
+        dataTransformLoadFunctionArn: !GetAtt dataTransformLoadFunction.Arn
   monthlyUserPermissionAssessmentLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
