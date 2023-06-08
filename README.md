@@ -99,10 +99,10 @@ Example of the report(s) shown in the S3 bucket:
 csv report details:
 | User | PrincipalId | PrincipalType | GroupName | AccountIdAssignment | PermissionSetARN | PermissionSetName | Inline Policy | Customer Managed Policy | AWS Managed Policy |
 | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
-| username      | An identifier for an object in IAM Identity Center, such as a user or group.       | USER or GROUP       | Group’s display name value (if any) | Identifier of the AWS account assigned with the specified permission set      | ARN of the permission set       | Name of the permission set        | Inline policy that is attached to the permission set        | Specifies the names and paths of the customer managed policies that you have attached to your permission set    | Details of the AWS managed policy       |
+| username      | An identifier for an object in IAM Identity Center, such as a user or group.       | USER or GROUP       | Group’s display name value (if PrincipalType is GROUP) | Identifier of the AWS account assigned with the specified permission set      | ARN of the permission set       | Name of the permission set        | Inline policy that is attached to the permission set        | Specifies the names and paths of the customer managed policies that you have attached to your permission set    | Details of the AWS managed policy       |
 
 ### (Optional) Customizing your user notification email
-If you wish to customize your email notification subject and email content, you can do so at the Lambda Function `{StackName}-monthlyAssessmentFunction-{RandomID}`. Scroll down to the bottom of the source code and edit the following part accordingly:
+If you wish to customize your email notification subject and email content, you can do so at the Lambda Function `{StackName}-dataTransformLoadFunction-{RandomID}`. Scroll down to the bottom of the source code and edit the following part accordingly:
 ![lambda-customize-email](static/images/lambda-customize-email.jpg)
 
 ## Clean up the resources
