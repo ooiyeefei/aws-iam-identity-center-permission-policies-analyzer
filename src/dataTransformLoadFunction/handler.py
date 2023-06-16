@@ -45,7 +45,7 @@ def query_ddb_to_populate_report(user_name, principal_id, group_name, principal_
             for no_of_assignments, accountid in enumerate(permission['accountId']):
                 # Additional principal type check to prevent duplicated records (a user can be assigned individually or assigned as part of a group)
                 if principal_type == permission['principalType'][no_of_assignments]:
-                    writer.writerow([user_name, principal_id, permission['principalType'][no_of_assignments], group_name, permission['accountId'][no_of_assignments], permission['permissionSetArn'], permission['permissionSetName'], permission['inlinePolicies'], permission['customerPolicies'], permission['managedPolicies']])
+                    writer.writerow([user_name, principal_id, permission['principalType'][no_of_assignments], group_name, permission['accountId'][no_of_assignments], permission['permissionSetArn'], permission['permissionSetName'], permission['inlinePolicies'], permission['customerPolicies'], permission['managedPolicies'], permission['permissionsBoundary']])
                     
             
                     
@@ -67,7 +67,7 @@ def handler(event, context):
 
     with open('/tmp/' + curr_date + 'result.csv', 'w') as f:
         writer = csv.writer(f)
-        writer.writerow(['User', 'PrincipalId', 'PrincipalType', 'GroupName', 'AccountIdAssignment', 'PermissionSetARN', 'PermissionSetName', 'Inline Policy', 'Customer Managed Policy','AWS Managed Policy'])
+        writer.writerow(['User', 'PrincipalId', 'PrincipalType', 'GroupName', 'AccountIdAssignment', 'PermissionSetARN', 'PermissionSetName', 'Inline Policy', 'Customer Managed Policy','AWS Managed Policy', 'Permission Boundary'])
         
         for user in user_list_response.get('Items'):
             print('extracting user data')

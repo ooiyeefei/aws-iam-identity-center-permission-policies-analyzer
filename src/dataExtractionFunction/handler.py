@@ -91,6 +91,13 @@ def handler(event, context):
             )
         # print(customer_policies_response)
 
+        # get the list of customer managed policies attached in each of the permission set
+        permissions_boundary_response = sso.get_permissions_boundary_for_permission_set(
+            InstanceArn=INSTANCE_ARN,
+            PermissionSetArn=item
+            )
+
+
         # store all in ddb table
         iam_permissions_table.put_item(
             TableName=PERMISSION_TABLE,
@@ -104,6 +111,7 @@ def handler(event, context):
                 'managedPolicies': managed_policies,
                 'inlinePolicies': inline_policies_response['InlinePolicy'],
                 'customerPolicies': customer_policies_response['CustomerManagedPolicyReferences']
+                'permissionsBoundary': permissions_boundary_response['PermissionsBoundary']
             })
 
     user_list_response = identitystore.list_users(
