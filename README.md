@@ -97,9 +97,9 @@ Example of the report(s) shown in the S3 bucket:
 ![s3-bucket-report](static/images/s3-bucket-report.jpg)
 
 csv report details:
-| User | PrincipalId | PrincipalType | GroupName | AccountIdAssignment | PermissionSetARN | PermissionSetName | Inline Policy | Customer Managed Policy | AWS Managed Policy |
-| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
-| username      | An identifier for an object in IAM Identity Center, such as a user or group.       | USER or GROUP       | Group’s display name value (if PrincipalType is GROUP) | Identifier of the AWS account assigned with the specified permission set      | ARN of the permission set       | Name of the permission set        | Inline policy that is attached to the permission set        | Specifies the names and paths of the customer managed policies that you have attached to your permission set    | Details of the AWS managed policy       |
+| User | PrincipalId | PrincipalType | GroupName | AccountIdAssignment | PermissionSetARN | PermissionSetName | Inline Policy | Customer Managed Policy | AWS Managed Policy | Permission Boundary |
+| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | ----------- |
+| username      | An identifier for an object in IAM Identity Center, such as a user or group.       | USER or GROUP       | Group’s display name value (if PrincipalType is GROUP) | Identifier of the AWS account assigned with the specified permission set      | ARN of the permission set       | Name of the permission set        | Inline policy that is attached to the permission set        | Specifies the names and paths of the customer managed policies that you have attached to your permission set    | Details of the AWS managed policy       | Permission boundary details (Customer Managed Policy Reference and/or AWS managed policy ARN)     |
 
 ### (Optional) Customizing your user notification email
 If you wish to customize your email notification subject and email content, you can do so at the Lambda Function `{StackName}-dataTransformLoadFunction-{RandomID}`. Scroll down to the bottom of the source code and edit the following part accordingly:
