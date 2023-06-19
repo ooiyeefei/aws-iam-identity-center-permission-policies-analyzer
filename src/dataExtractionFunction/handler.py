@@ -42,9 +42,15 @@ def handler(event, context):
             )
 
         # Define array to store Principal ID, Account ID and Principal Type
+<<<<<<< HEAD:src/dataExtractionFunction/handler.py
         principal_id_list=[]
         account_list=[]
         principal_type_list=[]
+=======
+        principalId_list=[]
+        account_list=[]
+        principalType_list=[]
+>>>>>>> d782689 (Extract more data (principal type, group name, accountid, permission set name) and modifying logic to cover all edge cases in report generation):src/updateDbFunction/handler.py
         
         for account in assoc_acc_response.get('AccountIds'):
             # get the principal ID to link with the AWS IAM Identity Center group to get members
@@ -56,9 +62,15 @@ def handler(event, context):
 
             for group in account_assignments_response['AccountAssignments']:
                 # build json
+<<<<<<< HEAD:src/dataExtractionFunction/handler.py
                 principal_id_list.append(group['PrincipalId'])
                 account_list.append(group['AccountId'])
                 principal_type_list.append(group['PrincipalType'])
+=======
+                principalId_list.append(group['PrincipalId'])
+                account_list.append(group['AccountId'])
+                principalType_list.append(group['PrincipalType'])
+>>>>>>> d782689 (Extract more data (principal type, group name, accountid, permission set name) and modifying logic to cover all edge cases in report generation):src/updateDbFunction/handler.py
                 
         # get the list of managed policies attached in each of the permission set
         managed_policies_response = sso.list_managed_policies_in_permission_set(
@@ -112,9 +124,15 @@ def handler(event, context):
                 'id': INSTANCE_ARN,
                 'permissionSetArn': item,
                 'permissionSetName': describe_permission_set_response['PermissionSet']['Name'],
+<<<<<<< HEAD:src/dataExtractionFunction/handler.py
                 'principalId': principal_id_list,
                 'accountId': account_list,
                 'principalType': principal_type_list,
+=======
+                'principalId': principalId_list,
+                'accountId': account_list,
+                'principalType': principalType_list,
+>>>>>>> d782689 (Extract more data (principal type, group name, accountid, permission set name) and modifying logic to cover all edge cases in report generation):src/updateDbFunction/handler.py
                 'managedPolicies': managed_policies,
                 'inlinePolicies': inline_policies_response['InlinePolicy'],
                 'customerPolicies': customer_policies_response['CustomerManagedPolicyReferences'],
@@ -134,13 +152,21 @@ def handler(event, context):
                 'UserId': user['UserId']
             }
         )
+<<<<<<< HEAD:src/dataExtractionFunction/handler.py
         group_name_list=[]
+=======
+        groupName_list=[]
+>>>>>>> d782689 (Extract more data (principal type, group name, accountid, permission set name) and modifying logic to cover all edge cases in report generation):src/updateDbFunction/handler.py
         for group in user_group_membership_response['GroupMemberships']:
             group_description_response = identitystore.describe_group(
                 IdentityStoreId=IDENTITY_STORE_ID,
                 GroupId=group['GroupId']
                 )
+<<<<<<< HEAD:src/dataExtractionFunction/handler.py
             group_name_list.append(group_description_response['DisplayName'])
+=======
+            groupName_list.append(group_description_response['DisplayName'])
+>>>>>>> d782689 (Extract more data (principal type, group name, accountid, permission set name) and modifying logic to cover all edge cases in report generation):src/updateDbFunction/handler.py
         
         # store all in ddb table
         user_list_table.put_item(
@@ -149,7 +175,11 @@ def handler(event, context):
                 'userId': user['UserId'],
                 'userName': user['UserName'],
                 'groupMemberships': user_group_membership_response['GroupMemberships'],
+<<<<<<< HEAD:src/dataExtractionFunction/handler.py
                 'groupName': group_name_list
+=======
+                'groupName': groupName_list
+>>>>>>> d782689 (Extract more data (principal type, group name, accountid, permission set name) and modifying logic to cover all edge cases in report generation):src/updateDbFunction/handler.py
             })
     
     return event
