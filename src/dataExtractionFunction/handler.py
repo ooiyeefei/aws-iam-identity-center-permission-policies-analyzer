@@ -1,5 +1,6 @@
 import json
 import boto3
+import botocore
 import os
 
 AWS_REGION = os.environ['AWS_DEFAULT_REGION']
@@ -78,18 +79,31 @@ def handler(event, context):
                 )
             managed_policies.append({'policryArn': i['Arn'], 'policy_type': 'aws_managed', 'policyJson': json.dumps(policy_json['PolicyVersion']['Document'], default=str)})
         
-        # get the list of inline policies attached in each of the permission set
+        # get the inline policy attached in each of the permission set
         inline_policies_response = sso.get_inline_policy_for_permission_set(
             InstanceArn=INSTANCE_ARN,
             PermissionSetArn=item
             )
 
-        # get the list of customer managed policies attached in each of the permission set
+        # get the list of customer managed policy references attached in each of the permission set
         customer_policies_response = sso.list_customer_managed_policy_references_in_permission_set(
             InstanceArn=INSTANCE_ARN,
             PermissionSetArn=item
             )
         # print(customer_policies_response)
+
+        # get the permission boundary attached in each of the permission set
+        try: 
+            permissions_boundary_response = sso.get_permissions_boundary_for_permission_set(
+                InstanceArn=INSTANCE_ARN,
+                PermissionSetArn=item
+                )
+        except botocore.exceptions.ClientError as error:
+            if error.response['Error']['Code'] == 'ResourceNotFoundException':
+                print('No Permission Boundary attached')
+                permissions_boundary_response = {'PermissionsBoundary':''}
+            else:
+                raise error
 
         # store all in ddb table
         iam_permissions_table.put_item(
@@ -103,7 +117,8 @@ def handler(event, context):
                 'principalType': principal_type_list,
                 'managedPolicies': managed_policies,
                 'inlinePolicies': inline_policies_response['InlinePolicy'],
-                'customerPolicies': customer_policies_response['CustomerManagedPolicyReferences']
+                'customerPolicies': customer_policies_response['CustomerManagedPolicyReferences'],
+                'permissionsBoundary': permissions_boundary_response['PermissionsBoundary']
             })
 
     user_list_response = identitystore.list_users(
