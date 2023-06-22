@@ -40,6 +40,8 @@ Resources:
         StreamViewType: NEW_AND_OLD_IMAGES
   notificationEmail:
     Type: AWS::SNS::Topic
+    Properties:
+      KmsMasterKeyId: alias/aws/sns
   dataExtractionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -218,6 +220,8 @@ Resources:
       PublicAccessBlockConfiguration:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
   monthlyReportBucketBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
