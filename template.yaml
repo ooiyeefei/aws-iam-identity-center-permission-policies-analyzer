@@ -1,4 +1,14 @@
 Transform: AWS::Serverless-2016-10-31
+Parameters:
+  EmailAddress:
+    Type: String
+    Description: Enter your email address to receive notification
+  IdentityStoreID:
+    Type: String
+    Description: Enter your Identity Store ID
+  IdentityStoreInstanceArn:
+    Type: String
+    Description: Enter your Identity Store Instance ARN
 Resources:
   monthlySchedule:
     Type: AWS::Scheduler::Schedule
@@ -10,6 +20,13 @@ Resources:
       Target:
         Arn: !Ref monthlyUserPermissionAssessment
         RoleArn: !GetAtt monthlyScheduleTomonthlyUserPermissionAssessmentRole.Arn
+        Input: 
+          !Sub | 
+            {
+              "identityStoreId": "${IdentityStoreID}",
+              "instanceArn": "${IdentityStoreInstanceArn}",
+              "ssoDeployedRegion": "${AWS::Region}" 
+            }
   fullPermissionSetsWithGroupTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -42,6 +59,9 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       KmsMasterKeyId: alias/aws/sns
+      Subscription:
+        - Endpoint: !Ref EmailAddress
+          Protocol: email
   dataExtractionFunction:
     Type: AWS::Serverless::Function
     Properties:
