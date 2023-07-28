@@ -80,7 +80,6 @@ Resources:
       MemorySize: 6008
       Timeout: 120
       Tracing: Active
-      KmsKeyArn: alias/aws/lambda
       Environment:
         Variables:
           PERMISSION_TABLE_NAME: !Ref fullPermissionSetsWithGroupTable
@@ -129,7 +128,6 @@ Resources:
       MemorySize: 3008
       Timeout: 30
       Tracing: Active
-      KmsKeyArn: alias/aws/lambda
       Environment:
         Variables:
           TOPIC_NAME: !GetAtt notificationEmail.TopicName
