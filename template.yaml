@@ -41,6 +41,9 @@ Resources:
           KeyType: HASH
         - AttributeName: permissionSetArn
           KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
   usersWithGroupTable:
@@ -53,6 +56,9 @@ Resources:
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
   notificationEmail:
@@ -107,9 +113,9 @@ Resources:
         - !Sub arn:aws:lambda:${AWS::Region}:770693421928:layer:Klayers-p39-boto3:9
   dataExtractionFunctionLogGroup:
     Type: AWS::Logs::LogGroup
-    DeletionPolicy: Retain
     Properties:
       LogGroupName: !Sub /aws/lambda/${dataExtractionFunction}
+      RetentionInDays: 90
   dataTransformLoadFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -143,9 +149,9 @@ Resources:
             BucketName: !Ref monthlyReportBucket
   dataTransformLoadFunctionLogGroup:
     Type: AWS::Logs::LogGroup
-    DeletionPolicy: Retain
     Properties:
       LogGroupName: !Sub /aws/lambda/${dataTransformLoadFunction}
+      RetentionInDays: 90
   monthlyUserPermissionAssessment:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -205,6 +211,7 @@ Resources:
       LogGroupName: !Sub
         - /aws/vendedlogs/states/${AWS::StackName}-${ResourceId}-Logs
         - ResourceId: monthlyUserPermissionAssessment
+      RetentionInDays: 90
   monthlyScheduleTomonthlyUserPermissionAssessmentRole:
     Type: AWS::IAM::Role
     Properties:
@@ -238,6 +245,8 @@ Resources:
               SSEAlgorithm: aws:kms
               KMSMasterKeyID: alias/aws/s3
       PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
       VersioningConfiguration:
